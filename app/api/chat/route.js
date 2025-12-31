@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/jwt";
 import { verifyJwt } from "../../../lib/jwt";
 
 export async function GET() {

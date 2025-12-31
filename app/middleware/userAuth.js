@@ -18,33 +18,27 @@ export const userAuth = async () => {
       };
     }
 
-    let userData;
+    let decoded;
     try {
-      userData = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (jwtError) {
-      console.error("JWT Verification Error:", jwtError.message);
-
-      if (jwtError.name === "TokenExpiredError") {
-        return {
-          error: true,
-          response: NextResponse.json(
-            { message: "Session expired. Please login again" },
-            { status: 401 }
-          ),
-        };
-      }
-
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
       return {
         error: true,
         response: NextResponse.json(
-          { message: "Invalid authentication token" },
+          { message: "Invalid or expired token" },
           { status: 401 }
         ),
       };
     }
 
+    // ✅ use userId from JWT
     const user = await prisma.user.findUnique({
-      where: { email: userData.email },
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
     });
 
     if (!user) {
