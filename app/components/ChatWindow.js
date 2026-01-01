@@ -9,6 +9,16 @@ export default function ChatWindow({ chatId, setChatId, onNewChat }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isAiThinking, setIsAiThinking] = useState(false);
   const previousChatIdRef = useRef(null);
+  const messagesEndRef = useRef(null);
+
+  // Auto scroll to bottom when messages change
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isAiThinking]);
 
   useEffect(() => {
     if (!chatId) {
@@ -55,7 +65,9 @@ export default function ChatWindow({ chatId, setChatId, onNewChat }) {
       <div className="absolute top-0 left-0 w-48 h-48 sm:w-64 sm:h-64 lg:w-96 lg:h-96 bg-orange-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse"></div>
       <div className="absolute bottom-0 right-0 w-48 h-48 sm:w-64 sm:h-64 lg:w-96 lg:h-96 bg-amber-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" style={{ animationDelay: "2s" }}></div>
       
-      <div className="flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto space-y-4 sm:space-y-6 relative z-10">
+      <div 
+        className="flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto space-y-4 sm:space-y-6 relative z-10 scroll-smooth"
+      >
         {isLoading ? (
           <div className="h-full flex items-center justify-center px-4">
             <div className="relative">
@@ -152,6 +164,9 @@ export default function ChatWindow({ chatId, setChatId, onNewChat }) {
                 </div>
               </div>
             )}
+            
+            {/* Invisible element at the bottom for auto-scroll */}
+            <div ref={messagesEndRef} />
           </>
         )}
       </div>
