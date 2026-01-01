@@ -1,3 +1,7 @@
+export const dynamic = "force-dynamic";
+
+
+
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifyJwt } from "../../../lib/jwt";
