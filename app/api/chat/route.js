@@ -1,5 +1,3 @@
-
-
 import { prisma } from "@/lib/prisma";
 import { userAuth } from "../../middle-ware/userAuth";
 export async function GET(req) {
