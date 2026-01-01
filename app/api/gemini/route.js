@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { prisma } from "@/lib/prisma";
-import { userAuth } from "../../middleware/userAuth";
+import { userAuth } from "../../middle-ware/userAuth";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 

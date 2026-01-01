@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/prisma";
-import { userAuth } from "../../middleware/userAuth";
+import { userAuth } from "../../middle-ware/userAuth";
 export async function GET(req) {
   try {
     const auth = await userAuth(req);
