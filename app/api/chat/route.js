@@ -4,8 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { userAuth } from "../../middleware/userAuth";
 export async function GET(req) {
   try {
-    const user = await userAuth(req);
-    const userId = user.id;
+    const auth = await userAuth(req);
+
+    if (auth.error) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+    
+    const userId = auth.user.id;
 
     const chats = await prisma.chatSession.findMany({
       where: { userId },

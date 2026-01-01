@@ -8,7 +8,7 @@ import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { clearUser } from "../../Redux/userSlice";
 
-export default function Sidebar({ onSelect, refresh, onRefreshed }) {
+export default function Sidebar({ chatId, onSelect, refresh, onRefreshed }) {
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
@@ -51,14 +51,18 @@ export default function Sidebar({ onSelect, refresh, onRefreshed }) {
     }
   }, [refresh]);
 
-  const deleteChat = async (chatId) => {
+  const deleteChat = async (id) => {
     if (!confirm("Delete this chat?")) return;
 
     try {
-      setDeletingId(chatId);
-      await api.delete(`/api/chat/${chatId}`);
-      setChats((prev) => prev.filter((c) => c.id !== chatId));
-      onSelect(null);
+      setDeletingId(id);
+      await api.delete(`/api/chat/${id}`);
+      setChats((prev) => prev.filter((c) => c.id !== id));
+      
+      // If deleting the active chat, clear it
+      if (chatId === id) {
+        onSelect(null);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -95,42 +99,79 @@ export default function Sidebar({ onSelect, refresh, onRefreshed }) {
           <div className="flex items-center justify-center mt-10">
             <Loader2 className="animate-spin text-orange-400" size={24} />
           </div>
-        ) : (
-          chats.map((chat) => (
-            <div
-              key={chat.id}
-              className="group flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800/50 transition-all duration-200 cursor-pointer border border-transparent hover:border-slate-700/50"
-            >
-              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center group-hover:bg-slate-700 transition-colors">
-                <MessageSquare
-                  size={16}
-                  className="text-slate-400 group-hover:text-orange-400 transition-colors"
-                />
-              </div>
-
-              <span
-                onClick={() => onSelect(chat.id)}
-                className="flex-1 truncate text-sm text-slate-300 group-hover:text-white transition-colors"
-              >
-                {chat.title || "New Chat"}
-              </span>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteChat(chat.id);
-                }}
-                disabled={deletingId === chat.id}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md hover:bg-orange-500/10 hover:text-orange-400 disabled:cursor-not-allowed disabled:opacity-100"
-              >
-                {deletingId === chat.id ? (
-                  <Loader2 size={16} className="animate-spin text-orange-400" />
-                ) : (
-                  <Trash2 size={16} />
-                )}
-              </button>
+        ) : chats.length === 0 ? (
+          <div className="text-center py-12 px-4">
+            <div className="w-16 h-16 mx-auto mb-4 bg-slate-800/50 rounded-full flex items-center justify-center border border-orange-500/20">
+              <MessageSquare className="w-8 h-8 text-orange-400/50" />
             </div>
-          ))
+            <p className="text-sm text-slate-400">No chats yet</p>
+            <p className="text-xs text-slate-500 mt-1">Start a new conversation</p>
+          </div>
+        ) : (
+          chats.map((chat) => {
+            const isActive = chatId === chat.id;
+            
+            return (
+              <div
+                key={chat.id}
+                onClick={() => onSelect(chat.id)}
+                className={`group relative flex items-center gap-3 p-3 rounded-lg transition-all duration-200 cursor-pointer border ${
+                  isActive
+                    ? "bg-gradient-to-r from-orange-500/20 via-orange-600/20 to-amber-600/20 border-orange-500/50 shadow-lg shadow-orange-500/10"
+                    : "border-transparent hover:bg-slate-800/50 hover:border-slate-700/50"
+                }`}
+              >
+                {/* Active indicator bar */}
+                {isActive && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-orange-500 to-amber-600 rounded-r-full"></div>
+                )}
+
+                <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                  isActive 
+                    ? "bg-orange-500/20" 
+                    : "bg-slate-800 group-hover:bg-slate-700"
+                }`}>
+                  <MessageSquare
+                    size={16}
+                    className={`transition-colors ${
+                      isActive
+                        ? "text-orange-400"
+                        : "text-slate-400 group-hover:text-orange-400"
+                    }`}
+                  />
+                </div>
+
+                <span
+                  className={`flex-1 truncate text-sm transition-colors ${
+                    isActive
+                      ? "text-orange-300 font-medium"
+                      : "text-slate-300 group-hover:text-white"
+                  }`}
+                >
+                  {chat.title || "New Chat"}
+                </span>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteChat(chat.id);
+                  }}
+                  disabled={deletingId === chat.id}
+                  className={`transition-opacity p-1.5 rounded-md disabled:cursor-not-allowed ${
+                    isActive
+                      ? "opacity-100 hover:bg-orange-500/20 text-orange-400"
+                      : "opacity-0 group-hover:opacity-100 hover:bg-orange-500/10 hover:text-orange-400"
+                  }`}
+                >
+                  {deletingId === chat.id ? (
+                    <Loader2 size={16} className="animate-spin text-orange-400" />
+                  ) : (
+                    <Trash2 size={16} />
+                  )}
+                </button>
+              </div>
+            );
+          })
         )}
       </div>
 

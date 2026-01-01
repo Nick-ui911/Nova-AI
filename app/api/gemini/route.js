@@ -10,8 +10,13 @@ export async function POST(req) {
   try {
     // ✅ read token cookie
     // ✅ Auth handled by middleware
-    const user = await userAuth(req); // must return user or throw
-    const userId = user.id;
+    const auth = await userAuth(req);
+
+    if (auth.error) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+    
+    const userId = auth.user.id;
 
     const { message, chatId } = await req.json();
     let sessionId = chatId;

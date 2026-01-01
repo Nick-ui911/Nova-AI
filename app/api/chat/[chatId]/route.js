@@ -6,8 +6,13 @@ import { userAuth } from "../../../middleware/userAuth";
 export async function GET(req, { params }) {
   try {
     // ✅ Auth handled by middleware
-    const user = await userAuth(req); // must return user or throw
-    const userId = user.id;
+    const auth = await userAuth(req);
+
+    if (auth.error) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+    
+    const userId = auth.user.id;
 
     const { chatId } = await params;
 
@@ -40,9 +45,13 @@ export async function GET(req, { params }) {
 // 🔹 DELETE chat
 export async function DELETE(req, { params }) {
   try {
-    // ✅ Auth handled by middleware
-    const user = await userAuth(req); // must return user or throw
-    const userId = user.id;
+    const auth = await userAuth(req);
+
+    if (auth.error) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+    
+    const userId = auth.user.id;
 
     const { chatId } = await params;
 

@@ -19,6 +19,7 @@ export default function ChatPage() {
   return (
     <div className="flex h-screen">
       <Sidebar
+      chatId={chatId}
         onSelect={setChatId}
         refresh={refreshSidebar}
         onRefreshed={() => setRefreshSidebar(false)}
