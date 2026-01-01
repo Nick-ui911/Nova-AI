@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { cookies } from "next/headers";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { prisma } from "@/lib/prisma";
