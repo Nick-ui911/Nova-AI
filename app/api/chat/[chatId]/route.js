@@ -40,12 +40,9 @@ export async function GET(req, { params }) {
 // 🔹 DELETE chat
 export async function DELETE(req, { params }) {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
-    if (!token) return new Response("Unauthorized", { status: 401 });
-
-    const decoded = verifyJwt(token);
-    const userId = decoded.userId;
+    // ✅ Auth handled by middleware
+    const user = await userAuth(req); // must return user or throw
+    const userId = user.id;
 
     const { chatId } = await params;
 
