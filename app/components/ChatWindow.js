@@ -65,6 +65,33 @@ export default function ChatWindow({ chatId, setChatId, onNewChat }) {
       <div className="absolute top-0 left-0 w-48 h-48 sm:w-64 sm:h-64 lg:w-96 lg:h-96 bg-orange-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse"></div>
       <div className="absolute bottom-0 right-0 w-48 h-48 sm:w-64 sm:h-64 lg:w-96 lg:h-96 bg-amber-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" style={{ animationDelay: "2s" }}></div>
       
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-xl border-b border-orange-500/20 shadow-lg">
+        <div className="px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-4">
+          <div className="max-w-full mx-auto flex items-center justify-center">
+            {/* App Name and Logo - Centered */}
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              {/* Logo Icon */}
+              <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/30">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              
+              {/* App Name */}
+              <div className="flex flex-col">
+                <h1 className="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-r from-orange-400 via-orange-500 to-amber-500 bg-clip-text text-transparent tracking-tight">
+                  Nova Chat AI
+                </h1>
+                <p className="text-[9px] sm:text-[10px] md:text-xs text-slate-400 -mt-0.5">
+                  Powered by Intelligence
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div 
         className="flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto space-y-4 sm:space-y-6 relative z-10 scroll-smooth"
       >
@@ -171,14 +198,12 @@ export default function ChatWindow({ chatId, setChatId, onNewChat }) {
         )}
       </div>
 
-      <div className="border-t border-orange-500/20 bg-slate-900/80 backdrop-blur-xl shadow-2xl relative z-10">
-        <ChatInput
-          chatId={chatId}
-          setChatId={setChatId}
-          onAppend={handleAppend}
-          onNewChat={onNewChat}
-        />
-      </div>
+      <ChatInput
+        chatId={chatId}
+        setChatId={setChatId}
+        onAppend={handleAppend}
+        onNewChat={onNewChat}
+      />
     </div>
   );
 }
