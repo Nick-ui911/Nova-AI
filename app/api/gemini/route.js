@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { prisma } from "@/lib/prisma";
 import { userAuth } from "../../middleware/userAuth";

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { prisma } from "@/lib/prisma";
 import { userAuth } from "../../middleware/userAuth";
 export async function GET(req) {
