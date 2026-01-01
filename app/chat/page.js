@@ -5,6 +5,7 @@ import ChatWindow from "../components/ChatWindow";
 import Sidebar from "../components/SideBar";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
+import Loader from "../components/Loader";
 
 export default function ChatPage() {
   const [chatId, setChatId] = useState(null);
@@ -12,13 +13,8 @@ export default function ChatPage() {
   const user = useSelector((store) => store.user.user);
   const router = useRouter();
 
-  useEffect(() => {
-    if (!user) {
-      router.replace("/"); // 👈 better than push
-    }
-  }, [user, router]);
 
-  if (!user) return null;
+  if (!user) return <Loader />;
 
   return (
     <div className="flex h-screen">
