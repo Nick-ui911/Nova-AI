@@ -1,25 +1,17 @@
 export const dynamic = "force-dynamic";
 
-import { cookies } from "next/headers";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { prisma } from "@/lib/prisma";
-import { verifyJwt } from "../../../lib/jwt";
+import { userAuth } from "../../middleware/userAuth";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function POST(req) {
   try {
     // ✅ read token cookie
-    const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
-
-    if (!token) {
-      return new Response("Unauthorized", { status: 401 });
-    }
-
-    // ✅ decode JWT
-    const decoded = verifyJwt(token);
-    const userId = decoded.userId;
+    // ✅ Auth handled by middleware
+    const user = await userAuth(req); // must return user or throw
+    const userId = user.id;
 
     const { message, chatId } = await req.json();
     let sessionId = chatId;

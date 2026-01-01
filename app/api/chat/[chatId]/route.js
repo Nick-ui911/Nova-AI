@@ -1,21 +1,13 @@
 export const dynamic = "force-dynamic";
 
-
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
-import { verifyJwt } from "../../../../lib/jwt";
+import { userAuth } from "../../../middleware/userAuth";
 
 export async function GET(req, { params }) {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
-
-    if (!token) {
-      return new Response("Unauthorized", { status: 401 });
-    }
-
-    const decoded = verifyJwt(token);
-    const userId = decoded.userId;
+    // ✅ Auth handled by middleware
+    const user = await userAuth(req); // must return user or throw
+    const userId = user.id;
 
     const { chatId } = await params;
 
