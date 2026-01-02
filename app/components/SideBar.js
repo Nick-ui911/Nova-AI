@@ -3,16 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import api from "../../lib/axios";
-import {
-  Trash2,
-  MessageSquare,
-  Plus,
-  Loader2,
-  User,
-  Menu,
-  X,
-  ChevronDown,
-} from "lucide-react";
+import { Trash2, MessageSquare, Plus, Loader2, User, Menu, X, ChevronDown } from "lucide-react";
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { clearUser } from "../../Redux/userSlice";
@@ -67,7 +58,7 @@ export default function Sidebar({ chatId, onSelect, refresh, onRefreshed }) {
       setDeletingId(id);
       await api.delete(`/api/chat/${id}`);
       setChats((prev) => prev.filter((c) => c.id !== id));
-
+      
       if (chatId === id) {
         onSelect(null);
       }
@@ -106,12 +97,12 @@ export default function Sidebar({ chatId, onSelect, refresh, onRefreshed }) {
 
   useEffect(() => {
     if (mobileOpen) {
-      document.body.style.overflow = "hidden";
+      document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = 'unset';
     }
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = 'unset';
     };
   }, [mobileOpen]);
 
@@ -157,7 +148,7 @@ export default function Sidebar({ chatId, onSelect, refresh, onRefreshed }) {
             }}
             className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 p-3 sm:p-3.5 rounded-xl flex items-center gap-2 justify-center font-medium shadow-lg shadow-orange-500/20 transition-all duration-200 hover:shadow-orange-500/30 hover:scale-[1.02] active:scale-[0.98]"
           >
-            <Plus size={18} strokeWidth={2.5} className="sm:w-5 sm:h-5" />
+            <Plus size={18} strokeWidth={2.5} className="sm:w-5 sm:h-5" /> 
             <span className="text-sm">New Chat</span>
           </button>
         </div>
@@ -166,28 +157,21 @@ export default function Sidebar({ chatId, onSelect, refresh, onRefreshed }) {
         <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-1 min-h-0 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
           {loading ? (
             <div className="flex flex-col items-center justify-center mt-16 sm:mt-20">
-              <Loader2
-                className="animate-spin text-orange-400 mb-3"
-                size={28}
-              />
-              <p className="text-xs sm:text-sm text-slate-500">
-                Loading chats...
-              </p>
+              <Loader2 className="animate-spin text-orange-400 mb-3" size={28} />
+              <p className="text-xs sm:text-sm text-slate-500">Loading chats...</p>
             </div>
           ) : chats.length === 0 ? (
             <div className="text-center py-12 sm:py-16 px-4">
               <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-5 bg-slate-800/50 rounded-full flex items-center justify-center border-2 border-orange-500/20">
                 <MessageSquare className="w-8 h-8 sm:w-10 sm:h-10 text-orange-400/50" />
               </div>
-              <p className="text-sm sm:text-base font-medium text-slate-300 mb-1">
-                No chats yet
-              </p>
+              <p className="text-sm sm:text-base font-medium text-slate-300 mb-1">No chats yet</p>
               <p className="text-xs text-slate-500">Start a new conversation</p>
             </div>
           ) : (
             chats.map((chat) => {
               const isActive = chatId === chat.id;
-
+              
               return (
                 <div
                   key={chat.id}
@@ -202,13 +186,11 @@ export default function Sidebar({ chatId, onSelect, refresh, onRefreshed }) {
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-orange-500 to-amber-600 rounded-r-full"></div>
                   )}
 
-                  <div
-                    className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-colors ${
-                      isActive
-                        ? "bg-orange-500/20"
-                        : "bg-slate-800 group-hover:bg-slate-700"
-                    }`}
-                  >
+                  <div className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-colors ${
+                    isActive 
+                      ? "bg-orange-500/20" 
+                      : "bg-slate-800 group-hover:bg-slate-700"
+                  }`}>
                     <MessageSquare
                       size={14}
                       className={`sm:w-4 sm:h-4 transition-colors ${
@@ -242,10 +224,7 @@ export default function Sidebar({ chatId, onSelect, refresh, onRefreshed }) {
                     }`}
                   >
                     {deletingId === chat.id ? (
-                      <Loader2
-                        size={14}
-                        className="sm:w-4 sm:h-4 animate-spin text-orange-400"
-                      />
+                      <Loader2 size={14} className="sm:w-4 sm:h-4 animate-spin text-orange-400" />
                     ) : (
                       <Trash2 size={14} className="sm:w-4 sm:h-4" />
                     )}
@@ -304,10 +283,7 @@ export default function Sidebar({ chatId, onSelect, refresh, onRefreshed }) {
                 }}
                 className="w-full flex items-center gap-2.5 sm:gap-3 px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm text-red-400 hover:bg-red-500/10 transition-all duration-200 hover:text-red-300 group/logout"
               >
-                <LogOut
-                  size={16}
-                  className="sm:w-[18px] sm:h-[18px] group-hover/logout:scale-110 transition-transform"
-                />
+                <LogOut size={16} className="sm:w-[18px] sm:h-[18px] group-hover/logout:scale-110 transition-transform" />
                 <span className="font-medium">Logout</span>
               </button>
             </div>

@@ -86,7 +86,7 @@ export default function ChatWindow({ chatId, setChatId, onNewChat, onToggleSideb
       </div>
 
       <div 
-        className="flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto space-y-3 sm:space-y-4 md:space-y-6 relative z-10 scroll-smooth"
+        className="flex-1 p-3 sm:p-4 md:p-6 pb-24 sm:pb-28 md:pb-32 overflow-y-auto space-y-3 sm:space-y-4 md:space-y-6 relative z-10 scroll-smooth"
       >
         {isLoading ? (
           <div className="h-full flex items-center justify-center px-4">
