@@ -136,6 +136,7 @@ export default function Sidebar({ chatId, onSelect, refresh, onRefreshed }) {
           border-r border-slate-800/50
           transform transition-transform duration-300 ease-in-out
           flex flex-col
+          overflow-hidden
           ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
       >
@@ -238,7 +239,8 @@ export default function Sidebar({ chatId, onSelect, refresh, onRefreshed }) {
         {/* Profile Section - Enhanced for mobile visibility */}
         <div
           ref={dropdownRef}
-          className="flex-shrink-0 p-3 sm:p-4 border-t border-slate-700/70 bg-slate-900 backdrop-blur-sm relative safe-area-bottom"
+          className="flex-shrink-0 p-3 sm:p-4 pb-6 sm:pb-4 border-t border-slate-700/70 bg-slate-900 backdrop-blur-sm relative"
+          style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
         >
           <div
             onClick={() => setOpen((prev) => !prev)}
