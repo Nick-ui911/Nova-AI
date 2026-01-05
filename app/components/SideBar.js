@@ -140,7 +140,7 @@ export default function Sidebar({ chatId, onSelect, refresh, onRefreshed }) {
         `}
       >
         {/* Header - New Chat Button */}
-        <div className="flex-shrink-0 p-3 sm:p-4  mt-16 lg:mt-0">
+        <div className="flex-shrink-0 p-3 sm:p-4 mt-16 lg:mt-0">
           <button
             onClick={() => {
               onSelect(null);
@@ -153,8 +153,8 @@ export default function Sidebar({ chatId, onSelect, refresh, onRefreshed }) {
           </button>
         </div>
 
-        {/* Chat List */}
-        <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-1 min-h-0 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+        {/* Chat List - Added pb to prevent overlap with profile */}
+        <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-1 min-h-0 pb-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
           {loading ? (
             <div className="flex flex-col items-center justify-center mt-16 sm:mt-20">
               <Loader2 className="animate-spin text-orange-400 mb-3" size={28} />
@@ -235,14 +235,14 @@ export default function Sidebar({ chatId, onSelect, refresh, onRefreshed }) {
           )}
         </div>
 
-        {/* Profile Section */}
+        {/* Profile Section - Enhanced for mobile visibility */}
         <div
           ref={dropdownRef}
-          className="flex-shrink-0 p-3 sm:p-4 border-t border-slate-800/50 bg-slate-900/95 backdrop-blur-sm relative"
+          className="flex-shrink-0 p-3 sm:p-4 border-t border-slate-700/70 bg-slate-900 backdrop-blur-sm relative safe-area-bottom"
         >
           <div
             onClick={() => setOpen((prev) => !prev)}
-            className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-slate-800/50 hover:bg-slate-800 transition-all duration-200 cursor-pointer group"
+            className="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-slate-800/70 hover:bg-slate-800 transition-all duration-200 cursor-pointer group border border-slate-700/30"
           >
             <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg ring-2 ring-slate-700/50 group-hover:ring-orange-500/30 transition-all">
               {user?.profilePicture ? (
