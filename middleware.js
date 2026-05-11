@@ -22,7 +22,9 @@ export async function middleware(req) {
 
   if (
     pathname.startsWith("/chat") ||
+    pathname.startsWith("/profile") ||
     pathname.startsWith("/api/chat") ||
+    pathname.startsWith("/api/gemini") ||
     pathname.startsWith("/api/profile")
   ) {
     if (!token) {

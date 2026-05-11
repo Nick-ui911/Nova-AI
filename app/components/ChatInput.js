@@ -1,107 +1,142 @@
 "use client";
 
 import { useState } from "react";
-import api from "../../lib/axios";
+import { ArrowUp } from "lucide-react";
 
-export default function ChatInput({ chatId, setChatId, onAppend, onNewChat }) {
+const MAX_CHARS = 4000;
+
+export default function ChatInput({
+  chatId, setChatId, onAppend, onStreamChunk, onStreamDone, onNewChat, onSetWaiting, disabled,
+}) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const sendMessage = async () => {
-    if (!message.trim()) return;
+    const trimmed = message.trim();
+    if (!trimmed || loading || disabled || trimmed.length > MAX_CHARS) return;
 
+    setError("");
     setLoading(true);
-    onAppend({ role: "user", content: message, id: Date.now() });
+    onAppend({ role: "user", content: trimmed, id: Date.now(), createdAt: new Date().toISOString() });
+    setMessage("");
+    const ta = document.querySelector("textarea");
+    if (ta) ta.style.height = "auto";
+    onSetWaiting?.(true);
 
     try {
-      const res = await api.post("/api/gemini", { message, chatId });
+      const response = await fetch("/api/gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ message: trimmed, chatId }),
+      });
 
-      if (!chatId) {
-        setChatId(res.data.chatId);
-        onNewChat();
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || `Error ${response.status}`);
       }
 
-      onAppend({ role: "ai", content: res.data.reply, id: Date.now() + 1 });
-      setMessage("");
-      
-      // Reset textarea height after sending
-      const textarea = document.querySelector('textarea');
-      if (textarea) {
-        textarea.style.height = 'auto';
+      const newChatId = response.headers.get("X-Chat-Id");
+      if (!chatId && newChatId) { setChatId(newChatId); onNewChat(); }
+
+      const aiMsgId = Date.now() + 1;
+      onSetWaiting?.(false);
+      onAppend({ role: "ai", content: "", id: aiMsgId, streaming: true, createdAt: new Date().toISOString() });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        onStreamChunk(aiMsgId, decoder.decode(value, { stream: true }));
       }
+      onStreamDone(aiMsgId);
     } catch (err) {
       console.error(err);
+      onSetWaiting?.(false);
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
+  const charsLeft = MAX_CHARS - message.length;
+  const isOverLimit = message.length > MAX_CHARS;
+  const canSend = message.trim() && !loading && !disabled && !isOverLimit;
+
   return (
-    <div className="fixed bottom-0 left-0 lg:left-72 right-0 p-3 sm:p-4 lg:p-6 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent z-30 pointer-events-none">
-      <div className="max-w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl mx-auto pointer-events-auto">
-        <div className="relative flex items-end gap-2 sm:gap-3 bg-slate-800/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-orange-500/20 p-2 sm:p-2.5 transition-all duration-300 hover:shadow-orange-500/20 focus-within:shadow-orange-500/30 focus-within:border-orange-500/40">
-          {/* Input Container */}
+    <div className="fixed bottom-0 left-0 lg:left-72 right-0 z-30 pointer-events-none">
+      {/* Fade gradient */}
+      <div className="absolute inset-x-0 bottom-0 h-36 bg-linear-to-t from-[#080812] via-[#080812]/80 to-transparent pointer-events-none" />
+
+      <div className="relative max-w-3xl mx-auto px-4 pb-5 pointer-events-auto">
+        {/* Error banner */}
+        {error && (
+          <div className="mb-3 flex items-center gap-2.5 px-4 py-2.5 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-xs animate-in slide-in-from-bottom-2 duration-200">
+            <div className="w-1.5 h-1.5 bg-red-400 rounded-full shrink-0 animate-pulse" />
+            <span className="flex-1">{error}</span>
+            <button onClick={() => setError("")} className="text-red-400/60 hover:text-red-400 transition-colors shrink-0">✕</button>
+          </div>
+        )}
+
+        {/* Input box */}
+        <div className={`relative flex items-end gap-2 bg-white/5 backdrop-blur-2xl border rounded-2xl p-2 transition-all duration-200 shadow-2xl shadow-black/40 ${
+          isOverLimit
+            ? "border-red-500/40 shadow-red-500/10"
+            : "border-white/9 focus-within:border-violet-500/40 focus-within:shadow-violet-500/10"
+        }`}>
           <div className="flex-1 relative">
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               rows={1}
-              disabled={loading}
-              className="w-full px-3 py-2.5 sm:px-4 sm:py-3.5 bg-transparent border-none outline-none resize-none text-slate-100 placeholder-slate-400 text-sm sm:text-base leading-relaxed max-h-32 sm:max-h-36 md:max-h-40 overflow-y-auto disabled:opacity-50 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent"
-              placeholder="Ask me anything..."
-              style={{
-                minHeight: "44px",
-                height: "auto",
-              }}
+              disabled={loading || disabled}
+              placeholder="Message Nova AI…"
+              className="w-full px-3 py-3 bg-transparent border-none outline-none resize-none text-slate-100 placeholder-slate-600 text-sm leading-relaxed max-h-36 overflow-y-auto disabled:opacity-40"
+              style={{ minHeight: "44px", height: "auto" }}
               onInput={(e) => {
                 e.target.style.height = "auto";
-                const maxHeight = window.innerWidth < 640 ? 128 : window.innerWidth < 768 ? 144 : 160;
-                e.target.style.height = Math.min(e.target.scrollHeight, maxHeight) + "px";
+                e.target.style.height = Math.min(e.target.scrollHeight, 144) + "px";
               }}
             />
+            {message.length > MAX_CHARS * 0.75 && (
+              <span className={`absolute bottom-2 right-2 text-[10px] tabular-nums ${isOverLimit ? "text-red-400" : "text-slate-600"}`}>
+                {charsLeft}
+              </span>
+            )}
           </div>
 
-          {/* Send Button */}
           <button
             onClick={sendMessage}
-            disabled={loading || !message.trim()}
-            className="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-r from-orange-500 via-orange-600 to-amber-600 text-white flex items-center justify-center transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-orange-500/50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none group relative overflow-hidden active:scale-95"
+            disabled={!canSend}
+            className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 ${
+              canSend
+                ? "bg-linear-to-br from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-500/30 hover:scale-105 active:scale-95"
+                : "bg-white/6 cursor-not-allowed"
+            }`}
             aria-label="Send message"
           >
-            {/* Animated shine effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-            
             {loading ? (
-              <div className="flex space-x-1 relative z-10">
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+              <div className="flex gap-0.5">
+                {[0, 120, 240].map((d) => (
+                  <div key={d} className="w-1 h-1 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                ))}
               </div>
             ) : (
-              <svg 
-                className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 relative z-10" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2.5} 
-                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" 
-                />
-              </svg>
+              <ArrowUp size={16} className={canSend ? "text-white" : "text-slate-600"} strokeWidth={2.5} />
             )}
           </button>
         </div>
+
+        <p className="text-center text-[10px] text-slate-700 mt-2">
+          Nova AI can make mistakes. Verify important information.
+        </p>
       </div>
     </div>
   );
