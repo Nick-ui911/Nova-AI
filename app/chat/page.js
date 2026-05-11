@@ -11,6 +11,7 @@ export default function ChatPage() {
   const [chatTitle, setChatTitle] = useState(null);
   const [refreshSidebar, setRefreshSidebar] = useState(false);
   const user = useSelector((store) => store.user.user);
+  const authLoading = useSelector((store) => store.user.loading);
   const chatInputRef = useRef(null);
 
   // Cmd+K / Ctrl+K → new chat
@@ -41,7 +42,7 @@ export default function ChatPage() {
     });
   }, [chatId]);
 
-  if (!user) return <Loader />;
+  if (authLoading || !user) return <Loader />;
 
   return (
     <div className="flex h-screen overflow-hidden">

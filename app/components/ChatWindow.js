@@ -116,6 +116,7 @@ export default function ChatWindow({ chatId, chatTitle, setChatId, onNewChat, ch
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const messagesEndRef = useRef(null);
   const scrollContainerRef = useRef(null);
+  const skipNextFetchRef = useRef(false);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -136,12 +137,18 @@ export default function ChatWindow({ chatId, chatTitle, setChatId, onNewChat, ch
 
   useEffect(() => {
     if (!chatId) { setMessages([]); return; }
+    if (skipNextFetchRef.current) { skipNextFetchRef.current = false; return; }
     setIsLoading(true);
     api.get(`/api/chat/${chatId}`)
       .then((res) => setMessages(res.data))
       .catch(console.error)
       .finally(() => setIsLoading(false));
   }, [chatId]);
+
+  const handleNewChat = useCallback(() => {
+    skipNextFetchRef.current = true;
+    onNewChat();
+  }, [onNewChat]);
 
   const handleAppend = useCallback((msg) => {
     setMessages((prev) => [...prev, msg]);
@@ -368,7 +375,7 @@ export default function ChatWindow({ chatId, chatTitle, setChatId, onNewChat, ch
         onAppend={handleAppend}
         onStreamChunk={handleStreamChunk}
         onStreamDone={handleStreamDone}
-        onNewChat={onNewChat}
+        onNewChat={handleNewChat}
         onSetWaiting={setIsWaiting}
         disabled={isBusy}
       />
