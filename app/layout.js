@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "../Redux/Provider";
 import StayLoginInReload from "./components/StayLoggedIn";
+import { ToastContainer } from "./components/Toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,6 +27,7 @@ export default function RootLayout({ children }) {
       >
         <ReduxProvider>
           <StayLoginInReload />
+          <ToastContainer />
           {children}
         </ReduxProvider>
       </body>

@@ -1,28 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowUp } from "lucide-react";
+import { useState, useRef, forwardRef, useImperativeHandle } from "react";
+import { ArrowUp, Square } from "lucide-react";
 
 const MAX_CHARS = 4000;
 
-export default function ChatInput({
+const ChatInput = forwardRef(function ChatInput({
   chatId, setChatId, onAppend, onStreamChunk, onStreamDone, onNewChat, onSetWaiting, disabled,
-}) {
+}, ref) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const textareaRef = useRef(null);
+  const abortRef = useRef(null);
 
-  const sendMessage = async () => {
-    const trimmed = message.trim();
+  const sendMessage = async (overrideText) => {
+    const trimmed = (overrideText !== undefined ? overrideText : message).trim();
     if (!trimmed || loading || disabled || trimmed.length > MAX_CHARS) return;
 
     setError("");
     setLoading(true);
+    if (overrideText === undefined) {
+      setMessage("");
+      if (textareaRef.current) textareaRef.current.style.height = "auto";
+    }
     onAppend({ role: "user", content: trimmed, id: Date.now(), createdAt: new Date().toISOString() });
-    setMessage("");
-    const ta = document.querySelector("textarea");
-    if (ta) ta.style.height = "auto";
     onSetWaiting?.(true);
+
+    let aiMsgId = null;
+    abortRef.current = new AbortController();
 
     try {
       const response = await fetch("/api/gemini", {
@@ -30,6 +36,7 @@ export default function ChatInput({
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ message: trimmed, chatId }),
+        signal: abortRef.current.signal,
       });
 
       if (!response.ok) {
@@ -40,26 +47,42 @@ export default function ChatInput({
       const newChatId = response.headers.get("X-Chat-Id");
       if (!chatId && newChatId) { setChatId(newChatId); onNewChat(); }
 
-      const aiMsgId = Date.now() + 1;
+      aiMsgId = Date.now() + 1;
       onSetWaiting?.(false);
       onAppend({ role: "ai", content: "", id: aiMsgId, streaming: true, createdAt: new Date().toISOString() });
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        onStreamChunk(aiMsgId, decoder.decode(value, { stream: true }));
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          onStreamChunk(aiMsgId, decoder.decode(value, { stream: true }));
+        }
+      } catch (e) {
+        if (e.name !== "AbortError") throw e;
       }
       onStreamDone(aiMsgId);
     } catch (err) {
-      console.error(err);
-      onSetWaiting?.(false);
-      setError(err.message || "Something went wrong. Please try again.");
+      if (err.name === "AbortError") {
+        onSetWaiting?.(false);
+        if (aiMsgId != null) onStreamDone(aiMsgId);
+      } else {
+        console.error(err);
+        onSetWaiting?.(false);
+        setError(err.message || "Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
+      abortRef.current = null;
     }
   };
+
+  useImperativeHandle(ref, () => ({
+    focus: () => textareaRef.current?.focus(),
+    triggerSend: (text) => sendMessage(text),
+    stop: () => abortRef.current?.abort(),
+  }));
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
@@ -92,6 +115,7 @@ export default function ChatInput({
         }`}>
           <div className="flex-1 relative">
             <textarea
+              ref={textareaRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -113,21 +137,19 @@ export default function ChatInput({
           </div>
 
           <button
-            onClick={sendMessage}
-            disabled={!canSend}
+            onClick={loading ? () => abortRef.current?.abort() : sendMessage}
+            disabled={!loading && !canSend}
             className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 ${
-              canSend
-                ? "bg-linear-to-br from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-500/30 hover:scale-105 active:scale-95"
-                : "bg-white/6 cursor-not-allowed"
+              loading
+                ? "bg-white/8 hover:bg-red-500/15 cursor-pointer"
+                : canSend
+                  ? "bg-linear-to-br from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-500/30 hover:scale-105 active:scale-95"
+                  : "bg-white/6 cursor-not-allowed"
             }`}
-            aria-label="Send message"
+            aria-label={loading ? "Stop generating" : "Send message"}
           >
             {loading ? (
-              <div className="flex gap-0.5">
-                {[0, 120, 240].map((d) => (
-                  <div key={d} className="w-1 h-1 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
-                ))}
-              </div>
+              <Square size={13} className="text-slate-300 fill-current" />
             ) : (
               <ArrowUp size={16} className={canSend ? "text-white" : "text-slate-600"} strokeWidth={2.5} />
             )}
@@ -135,9 +157,11 @@ export default function ChatInput({
         </div>
 
         <p className="text-center text-[10px] text-slate-700 mt-2">
-          Nova AI can make mistakes. Verify important information.
+          <span className="text-slate-600">Shift+Enter</span> for new line · Nova AI can make mistakes
         </p>
       </div>
     </div>
   );
-}
+});
+
+export default ChatInput;
